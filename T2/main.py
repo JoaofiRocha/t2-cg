@@ -6,9 +6,13 @@ from OpenGL.GL import *
 from Objeto3D import *
 
 o:Objeto3D
+d:Objeto3D
+morph:Objeto3D
+
+transformacao_iniciada:bool = False
 
 def init():
-    global o
+    global o, d
     glClearColor(0.5, 0.5, 0.9, 1.0)
     glClearDepth(1.0)
 
@@ -19,6 +23,12 @@ def init():
 
     o = Objeto3D()
     o.LoadFile('untitled.obj')
+
+    d = Objeto3D()
+    d.LoadFile('teste.obj')
+
+    morph = Objeto3D()
+    morph.LoadFile('untitled.obj')
 
     DefineLuz()
     PosicUser()
@@ -120,22 +130,37 @@ def DesenhaCubo():
     glutSolidCone(1, 1, 4, 4)
     glPopMatrix()
 
-def desenha():
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-    glMatrixMode(GL_MODELVIEW)
+def desenha(obj:Objeto3D):
+    def des():
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-    DesenhaPiso()
-    #DesenhaCubo()    
-    o.Desenha()
-    o.DesenhaWireframe()
-    o.DesenhaVertices()
+        glMatrixMode(GL_MODELVIEW)
+
+        DesenhaPiso()
+        #DesenhaCubo()    
+        obj.Desenha()
+        obj.DesenhaWireframe()
+        obj.DesenhaVertices()
 
     glutSwapBuffers()
-    pass
+    return des
 
 def teclado(key, x, y):
-    o.rotation = (1, 0, 0, o.rotation[3] + 2)    
+    #o.rotation = (1, 0, 0, o.rotation[3] + 2)    
+    global transformacao_iniciada
+    global morph
+
+    if transformacao_iniciada == False:
+        morph.Transforma(d)
+        transformacao_iniciada = True
+        return
+
+    if key == b'+':
+       morph.Aproxima(d, 0.1)
+
+    if key == b'-':
+       morph.Aproxima(d, -0.1)
 
     glutPostRedisplay()
     pass
@@ -153,14 +178,14 @@ def main():
     glutInitWindowPosition(100, 50)
     window1 = glutCreateWindow('Trabalho 2 - CG - obj1')
     init()
-    glutDisplayFunc(desenha)
+    glutDisplayFunc(desenha(o))
 
 
     glutInitWindowSize(640, 480)
     glutInitWindowPosition(800, 50)
     window2 = glutCreateWindow('Trabalho 2 - CG - obj2')
     init()
-    glutDisplayFunc(desenha)
+    glutDisplayFunc(desenha(d))
 
 
 
@@ -168,7 +193,7 @@ def main():
     glutInitWindowPosition(350, 600)
     windowsMorph = glutCreateWindow('Trabalho 2 - CG - Morph')
     init()
-    glutDisplayFunc(desenha)
+    glutDisplayFunc(desenha(morph))
 
 
 
