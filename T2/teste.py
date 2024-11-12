@@ -5,10 +5,12 @@ from OpenGL.GL import *
 
 from Objeto3D import *
 
-o:Objeto3D
+o1:Objeto3D
+o2:Objeto3D
+
 
 def init():
-    global o
+    global o1,o2
     glClearColor(0.5, 0.5, 0.9, 1.0)
     glClearDepth(1.0)
 
@@ -17,8 +19,11 @@ def init():
     glEnable(GL_CULL_FACE)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
-    o = Objeto3D()
-    o.LoadFile('untitled.obj')
+    o1 = Objeto3D()
+    o1.LoadFile('untitled.obj')
+
+    o2 = Objeto3D()
+    o2.LoadFile('teste.obj')
 
     DefineLuz()
     PosicUser()
@@ -122,22 +127,25 @@ def interpolar_vertices(vertices1, vertices2, t):
              v1[2] * (1 - t) + v2[2] * t) for v1, v2 in zip(vertices1, vertices2)]
 
 def DesenhaMorph(obj1, obj2, t):
-    """Desenha a interpolação entre obj1 e obj2, com base no fator t."""
-    associacoes = associar_faces_varios_para_um(obj1.vertices, obj1.faces, obj2.vertices, obj2.faces)
-    
-    # Para cada par de faces associadas, faça a interpolação
-    for i, j in associacoes:
-        vertices1 = [obj1.vertices[idx] for idx in obj1.faces[i]]
-        vertices2 = [obj2.vertices[idx] for idx in obj2.faces[j]]
+    def DesenhaMorph():
+        """Desenha a interpolação entre obj1 e obj2, com base no fator t."""
+        associacoes = associar_faces_varios_para_um(obj1.vertices, obj1.faces, obj2.vertices, obj2.faces)
         
-        # Interpolação entre as faces associadas
-        vertices_morfados = interpolar_vertices(vertices1, vertices2, t)
-        
-        # Desenhe a face interpolada
-        glBegin(GL_POLYGON)
-        for vertice in vertices_morfados:
-            glVertex3fv(vertice)
-        glEnd()
+        # Para cada par de faces associadas, faça a interpolação
+        for i, j in associacoes:
+            vertices1 = [obj1.vertices[idx] for idx in obj1.faces[i]]
+            vertices2 = [obj2.vertices[idx] for idx in obj2.faces[j]]
+            
+            # Interpolação entre as faces associadas
+            vertices_morfados = interpolar_vertices(vertices1, vertices2, t)
+            
+            # Desenhe a face interpolada
+            glBegin(GL_POLYGON)
+            for vertice in vertices_morfados:
+                glVertex3fv(vertice)
+            glEnd()
+
+    return DesenhaMorph
 
 
 t = 0.0  # Fator de morphing inicial
@@ -196,21 +204,21 @@ def DesenhaCubo():
     glutSolidCone(1, 1, 4, 4)
     glPopMatrix()
 
-def desenha():
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+def desenha(obj:Objeto3D):
+    def desenha():
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-    glMatrixMode(GL_MODELVIEW)
+        glMatrixMode(GL_MODELVIEW)
 
-    DesenhaPiso()
-    #DesenhaCubo()    
-    o.Desenha()
-    o.DesenhaWireframe()
-    o.DesenhaVertices()
+        DesenhaPiso()
+        #DesenhaCubo()    
+        obj.Desenha()
+        obj.DesenhaWireframe()
+        obj.DesenhaVertices()
 
-    DesenhaMorph(o1, o2, t)
-
-    glutSwapBuffers()
-    pass
+        glutSwapBuffers()
+        pass
+    return desenha
 
 def teclado(key, x, y):
     o.rotation = (1, 0, 0, o.rotation[3] + 2)    
@@ -231,14 +239,14 @@ def main():
     glutInitWindowPosition(100, 50)
     window1 = glutCreateWindow('Trabalho 2 - CG - obj1')
     init()
-    glutDisplayFunc(desenha)
+    glutDisplayFunc(desenha(o1))
 
 
     glutInitWindowSize(640, 480)
     glutInitWindowPosition(800, 50)
     window2 = glutCreateWindow('Trabalho 2 - CG - obj2')
     init()
-    glutDisplayFunc(desenha)
+    glutDisplayFunc(desenha(o2))
 
 
 
@@ -246,8 +254,9 @@ def main():
     glutInitWindowPosition(350, 600)
     windowsMorph = glutCreateWindow('Trabalho 2 - CG - Morph')
     init()
-    glutDisplayFunc(desenha)
+    glutDisplayFunc(DesenhaMorph(o1,o2,t))
 
+    glutTimerFunc(16,atualizaMorph,0)
 
 
     # Registra a funcao callback de redesenho da janela de visualizacao
