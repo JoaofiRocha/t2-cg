@@ -66,6 +66,18 @@ class Ponto:
         zr =  self.y*math.sin(anguloRad) + self.z*math.cos(anguloRad)
         self.y = yr
         self.z = zr
+        
+    def maisProximo(self, pontos):
+        if not pontos:
+            return None
+        menor_distancia = float('inf')
+        ponto_mais_proximo = None
+        for ponto in pontos:
+            distancia = math.sqrt((self.x - ponto.x) ** 2 + (self.y - ponto.y) ** 2 + (self.z - ponto.z) ** 2)
+            if distancia < menor_distancia:
+                menor_distancia = distancia
+                ponto_mais_proximo = ponto
+        return ponto_mais_proximo
 
 # ********************************************************************** */
 #                                                                        */
@@ -104,4 +116,5 @@ def HaInterseccao(k: Ponto, l: Ponto, m: Ponto, n: Ponto) -> bool:
     if not ret: return False
 
     return s>=0.0 and s <=1.0 and t>=0.0 and t<=1.0
+
 

@@ -87,4 +87,20 @@ class Objeto3D:
         glPopMatrix()
         pass
 
+    def Transforma(self, dest):
+        self.faces = dest.faces
+        res = []
+        for v in dest.vertices:
+            res.append(v.maisProximo(self.vertices))
+        self.vertices = res
+
+    def Aproxima(self, dest, passo):
+        for i in range(0, len(self.vertices)):
+            destPoint = dest.vertices[i]
+            originPoint = self.vertices[i]
+
+            self.vertices[i].x += (destPoint.x - originPoint.x) * passo
+            self.vertices[i].y += (destPoint.y - originPoint.y) * passo
+            self.vertices[i].z += (destPoint.z - originPoint.z) * passo
+
 
