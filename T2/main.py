@@ -143,7 +143,7 @@ def desenha(obj:Objeto3D):
         obj.DesenhaWireframe()
         obj.DesenhaVertices()
 
-    glutSwapBuffers()
+        glutSwapBuffers()
     return des
 
 def teclado(key, x, y):
