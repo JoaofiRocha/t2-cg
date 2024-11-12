@@ -75,7 +75,7 @@ def PosicUser():
 
     # Configura a matriz da projeção perspectiva (FOV, proporção da tela, distância do mínimo antes do clipping, distância máxima antes do clipping
     # https://registry.khronos.org/OpenGL-Refpages/gl2.1/xhtml/gluPerspective.xml
-    gluPerspective(60, 16/9, 0.01, 50)  # Projecao perspectiva
+    gluPerspective(70, 16/9, 0.01, 50)  # Projecao perspectiva
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
@@ -84,7 +84,7 @@ def PosicUser():
     # As três próximas especificam o ponto de foco nos eixos x, y e z
     # As três últimas especificam o vetor up
     # https://registry.khronos.org/OpenGL-Refpages/gl2.1/xhtml/gluLookAt.xml
-    gluLookAt(-2, 6, -8, 0, 0, 0, 0, 1.0, 0)
+    gluLookAt(-2, 8, -12, 0, 7, 0, 0, 1.0, 0)
 
 def DesenhaLadrilho():
     glColor3f(0.5, 0.5, 0.5)  # desenha QUAD preenchido
@@ -191,7 +191,7 @@ def main():
 
 
     glutInitWindowSize(640, 480)
-    glutInitWindowPosition(350, 600)
+    glutInitWindowPosition(350, 550)
     windowsMorph = glutCreateWindow('Trabalho 2 - CG - Morph')
     init()
     glutDisplayFunc(desenha(morph))
