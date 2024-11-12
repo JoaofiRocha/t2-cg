@@ -12,7 +12,7 @@ morph:Objeto3D
 transformacao_iniciada:bool = False
 
 def init():
-    global o, d
+    global o, d, morph
     glClearColor(0.5, 0.5, 0.9, 1.0)
     glClearDepth(1.0)
 
@@ -149,7 +149,7 @@ def desenha(obj:Objeto3D):
 def teclado(key, x, y):
     #o.rotation = (1, 0, 0, o.rotation[3] + 2)    
     global transformacao_iniciada
-    global morph
+    global morph, d
 
     if transformacao_iniciada == False:
         morph.Transforma(d)
@@ -166,6 +166,7 @@ def teclado(key, x, y):
     pass
 
 def main():
+    global o, d, morph
 
     glutInit(sys.argv)
 
