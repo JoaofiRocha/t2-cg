@@ -67,17 +67,21 @@ class Ponto:
         self.y = yr
         self.z = zr
         
-    def maisProximo(self, pontos):
+    def closest_point(self, pontos):
         if not pontos:
-            return None
+            return None, None
         menor_distancia = float('inf')
         ponto_mais_proximo = None
-        for ponto in pontos:
+        index_mais_proximo = -1  # Initialize index
+        for i, ponto in enumerate(pontos):
             distancia = math.sqrt((self.x - ponto.x) ** 2 + (self.y - ponto.y) ** 2 + (self.z - ponto.z) ** 2)
             if distancia < menor_distancia:
                 menor_distancia = distancia
                 ponto_mais_proximo = ponto
-        return ponto_mais_proximo
+                index_mais_proximo = i  # Update index
+        return ponto_mais_proximo, index_mais_proximo
+    
+
 
 # ********************************************************************** */
 #                                                                        */

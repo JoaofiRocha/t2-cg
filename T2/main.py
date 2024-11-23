@@ -157,10 +157,11 @@ def teclado(key, x, y):
         return
 
     if key == b'+':
-       morph.Aproxima(d, 0.1)
+       print("Aproxima")
+       morph.Aproxima(d,0.1)
 
     if key == b'-':
-       morph.Aproxima(d, -0.1)
+       morph.Aproxima(d,-0.1)
 
     glutPostRedisplay()
     pass
