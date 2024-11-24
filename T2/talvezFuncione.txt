@@ -1,17 +1,11 @@
-import random
-
 class Ponto:
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
         self.z = z
 
-    def __repr__(self):
-        return f"Ponto({self.x}, {self.y}, {self.z})"
-
-    def distance_to(self, outro):
-        return ((self.x - outro.x) ** 2 + (self.y - outro.y) ** 2 + (self.z - outro.z) ** 2) ** 0.5
-
+    def distance_to(self, other):
+        return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2 + (self.z - other.z) ** 2) ** 0.5
 
 class Face:
     def __init__(self, vertices):
@@ -49,73 +43,56 @@ class Face:
     def activate(self):
         self.active = True
 
-
 class Event:
     def __init__(self, time, index):
         self.time = time
         self.index = index
 
-    def should_execute(self, current_time):
-        return current_time >= self.time
-
-
-class ObjectMorph:
+class Objeto3D:
     def __init__(self, faces):
-        self.faces = faces  # Lista de objetos Face
-        self.events = []
+        self.faces = faces
         self.morph_timeline = 0
-        self.max_timeline = 0
-
-    def debug_faces(self):
-        print("Debugging Faces:")
-        for i, face in enumerate(self.faces):
-            print(f"Face {i}: Active={face.active}, Centroid={face.centroid}, "
-                  f"Vertices={[(v.x, v.y, v.z) for v in face.vertices]}")
-
-    def Transforma(self, dest):
-        timeline = 0
-        print(f"Faces Ativas: {len([f for f in self.faces if f.active])}, Dest: {len(dest.faces)}")
-
-        dest_centroids = [f.update_centroid() for f in dest.faces if f.active]
-        dest_centroids_idxs = list(range(len(dest_centroids)))
-
-        for i in range(max(len(dest.faces), len(self.faces))):
-            if i > len(self.faces) - 1:
-                # Adicionar nova face inativa e evento de ativação
-                random_face = random.choice(self.faces)
-                new_face = Face([Ponto(v.x, v.y, v.z) for v in random_face.vertices])
-                new_face.deactivate()  # Inicialmente inativa
-                self.faces.append(new_face)
-                self.events.append(Event(timeline, len(self.faces) - 1))
-                timeline += 1
-
-            if dest_centroids:
-                _, dest_idx = self.faces[i].update_centroid().closest_point(dest_centroids)
-                self.faces[i].set_dest(dest.faces[dest_centroids_idxs[dest_idx]])
-                del dest_centroids[dest_idx]
-                del dest_centroids_idxs[dest_idx]
-            else:
-                self.faces[i].set_dest(dest.faces[random.randint(0, len(dest.faces) - 1)])
-                self.events.append(Event(timeline, i))
-                timeline += 1
-
-        self.max_timeline = timeline
+        self.max_timeline = 100
+        self.events = []
 
     def Aproxima(self, dest, passo):
         active_faces = len([f for f in self.faces if f.active])
-        print(f"Faces Ativas: {active_faces}, Dest: {len(dest.faces)}, Timeline: {self.morph_timeline}, "
-              f"MaxTimeline: {self.max_timeline}")
+        print(f"Faces Ativas: {active_faces} Dest: {len(dest.faces)}, Timeline: {self.morph_timeline} MaxTimeline: {self.max_timeline} Vertices: {len([v for f in self.faces for v in f.vertices])} Vertices Dest: {len([v for f in dest.faces for v in f.vertices])}")
 
-        for face in self.faces:
-            if face.active:
-                face.move_to_dest(passo)
+        if self.morph_timeline >= self.max_timeline:
+            print("Morph timeline reached the maximum limit.")
+            return
+
+        for i in range(len(self.faces)):
+            if self.faces[i].active:
+                self.faces[i].move_to_dest(passo)
 
         for e in [e for e in self.events if e.should_execute(self.morph_timeline)]:
             if len(dest.faces) > active_faces:
-                print(f"Ativando face {e.index}")
+                print(f"Acionando face {e.index}")
                 self.faces[e.index].activate()
             elif len(dest.faces) < active_faces:
                 print(f"Desativando face {e.index}")
                 self.faces[e.index].deactivate()
 
-        self.morph_timeline += 10
+        self.morph_timeline += passo
+        print(f"Updated morph timeline: {self.morph_timeline}")
+        print(f"Vertices: {len([v for f in self.faces for v in f.vertices])} Vertices Dest: {len([v for f in dest.faces for v in f.vertices])}")
+
+    def associate_faces(self, dest):
+        for face in self.faces:
+            face.update_centroid()
+        for face in dest.faces:
+            face.update_centroid()
+
+        for face in self.faces:
+            closest_face = min(dest.faces, key=lambda f: face.centroid.distance_to(f.centroid))
+            face.set_dest(closest_face)
+
+# Example usage
+faces1 = [Face([Ponto(0, 0, 0), Ponto(1, 0, 0), Ponto(0, 1, 0)])]
+faces2 = [Face([Ponto(0, 0, 1), Ponto(1, 0, 1), Ponto(0, 1, 1)])]
+obj1 = Objeto3D(faces1)
+obj2 = Objeto3D(faces2)
+obj1.associate_faces(obj2)
+obj1.Aproxima(obj2, 0.1)

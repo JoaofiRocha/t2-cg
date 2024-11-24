@@ -41,24 +41,24 @@ class Face:
         self.vertices = []
 
 
-    def set_dest(self,dest):
-        new_vertices = [] 
-        dest_vertices =  dest.vertices.copy()
-        for i in range(0, len(dest_vertices)):
-            if i > len(self.vertices) - 1:
-                vertice = random.choice(self.vertices)
-            else:
-                vertice = self.vertices[i]
-            
-            new_vertices.append(vertice)
-            closest, _ = vertice.closest_point(dest_vertices)
-            self.target_vertices.append(closest)
-        self.vertices = new_vertices
+    def set_dest(self, dest):
+        self.target_vertices = []
+        dest_vertices = dest.vertices.copy()
         
-
-        # calcular vertices que devem ser removidos e adicionados
-
-        pass
+        # Ensure the current face has the same number of vertices as the destination face
+        if len(self.vertices) > len(dest_vertices):
+            # Truncate the current face vertices to match the destination face vertices
+            self.vertices = self.vertices[:len(dest_vertices)]
+        elif len(self.vertices) < len(dest_vertices):
+            # If there are more destination vertices, repeat the last vertex of the current face
+            while len(self.vertices) < len(dest_vertices):
+                self.vertices.append(self.vertices[-1])
+        
+        # Set the target vertices
+        for i in range(len(dest_vertices)):
+            self.target_vertices.append(dest_vertices[i])
+        
+        self.update_centroid()
 
     def update_centroid(self):
         x = sum([v.x for v in self.vertices]) / len(self.vertices)
@@ -83,6 +83,7 @@ class Objeto3D:
         self.position = Ponto(0,0,0)
         self.rotation = (0,0,0,0)
         self.vertices_dest = []
+        self.vertices = []
         self.events = []
         self.morph_timeline = 0
         self.max_timeline = 0
@@ -101,6 +102,10 @@ class Objeto3D:
             if values[0] == 'v': 
                 # item é um vértice, os outros elementos da linha são a posição dele
                 vertices.append(Ponto(float(values[1]),
+                                           float(values[2]),
+                                           float(values[3])))
+                # adicionamos o vértice à lista de vértices
+                self.vertices.append(Ponto(float(values[1]),
                                            float(values[2]),
                                            float(values[3])))
         for line in lines:
@@ -206,8 +211,6 @@ class Objeto3D:
 
         self.max_timeline = timeline
 
-        pass
-
 
     def Aproxima(self,dest,passo):
         active_faces = len([f for f in self.faces if f.active])
@@ -223,17 +226,14 @@ class Objeto3D:
                 # acionar face
                 print(f"Acionando face {e.index}")
                 self.faces[e.index].activate()
-                pass
             elif len(dest.faces) < active_faces:
                 # remover faces
                 print(f"Desativando face {e.index}")
                 self.faces[e.index].deactivate()
-                pass
             print(f"Vertices: {len([v for f in self.faces for v in f.vertices])} Vertices Dest: {len([v for f in dest.faces for v in f.vertices ])}")
 
             
         
         self.morph_timeline += 10
-        pass
 
 
