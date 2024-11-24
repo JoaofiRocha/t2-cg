@@ -5,20 +5,60 @@ from Ponto import *
 import random
 
 class Event:
-    def __init__(self, time: float, executed: bool = False):
+    def __init__(self, time: float,index, executed: bool = False):
         self.time = time
+        self.index = index
         self.executed = executed
+    def should_execute(self, current_time):
+        if self.executed:
+            return False
+        if current_time >= self.time:
+            self.executed = True
+            return True
+        return False
 
 class Face:
-    def __init__(self, vertices: list):
+    # preciso que cada face tenha o controle de vertices que devem ser removidos e adicionados. Cada face deve ter uma timeline de eventos 
+    def __init__(self, vertices: list, active: bool = True):
+        self.active = active
         self.vertices = vertices
+        self.target_vertices = []
         self.centroid = None
-        self.dest = None
 
     def print(self):
         print(f'Face:')
         for v in self.vertices:
             print(f'{v.x} {v.y} {v.z}')
+
+    def activate(self):
+        self.active = True
+        # for v in self.vertices:
+        #     v.active = True
+    
+    def deactivate(self):
+        print(f"Desativando face com {len(self.vertices)} vértices")
+        self.active = False
+        self.vertices = []
+
+
+    def set_dest(self,dest):
+        new_vertices = [] 
+        dest_vertices =  dest.vertices.copy()
+        for i in range(0, len(dest_vertices)):
+            if i > len(self.vertices) - 1:
+                vertice = random.choice(self.vertices)
+            else:
+                vertice = self.vertices[i]
+            
+            new_vertices.append(vertice)
+            closest, _ = vertice.closest_point(dest_vertices)
+            self.target_vertices.append(closest)
+        self.vertices = new_vertices
+        
+
+        # calcular vertices que devem ser removidos e adicionados
+
+        pass
 
     def update_centroid(self):
         x = sum([v.x for v in self.vertices]) / len(self.vertices)
@@ -28,13 +68,10 @@ class Face:
         return self.centroid
     
     def move_to_dest(self,passo):
-        if self.dest == None:
-            return
         for i in range(len(self.vertices)):
-            closest,_ = self.vertices[i].closest_point([v for v in self.dest.vertices])
-            self.vertices[i].x += (closest.x - self.vertices[i].x) * passo
-            self.vertices[i].y += (closest.y - self.vertices[i].y) * passo
-            self.vertices[i].z += (closest.z - self.vertices[i].z) * passo
+            self.vertices[i].x += (self.target_vertices[i].x - self.vertices[i].x) * passo
+            self.vertices[i].y += (self.target_vertices[i].y - self.vertices[i].y) * passo
+            self.vertices[i].z += (self.target_vertices[i].z - self.vertices[i].z) * passo
 
         self.update_centroid()
         pass
@@ -48,6 +85,7 @@ class Objeto3D:
         self.vertices_dest = []
         self.events = []
         self.morph_timeline = 0
+        self.max_timeline = 0
         pass
 
     def LoadFile(self, file:str):
@@ -73,8 +111,9 @@ class Objeto3D:
                 for fVertex in values[1:]:
                     fInfo = fVertex.split('/')
                     # dividimos cada elemento por '/'
-                    verticeIdx = int(fInfo[0]) - 1
-                    self.faces[-1].vertices.append(vertices[verticeIdx]) # primeiro elemento é índice do vértice da face
+                     
+                    vertice = vertices[int(fInfo[0]) - 1]
+                    self.faces[-1].vertices.append(vertice) # primeiro elemento é índice do vértice da face
                     # ignoramos textura e normal
                 
             # ignoramos outros tipos de items, no exercício não é necessário e vai só complicar mais
@@ -82,18 +121,18 @@ class Objeto3D:
             face.update_centroid()
         pass
 
-    def DesenhaVertices(self):
+    def DesenhaVertices(self, r=.1,g=.1,b=.8):
         glPushMatrix()
         glTranslatef(self.position.x, self.position.y, self.position.z)
         glRotatef(self.rotation[3], self.rotation[0], self.rotation[1], self.rotation[2])
-        glColor3f(.1, .1, .8)
+        glColor3f(r,g,b)
         glPointSize(8)
 
         glBegin(GL_POINTS)
         for f in self.faces:
-            glVertex(f.centroid.x, f.centroid.y, f.centroid.z)
-            for v in f.vertices:
-                glVertex(v.x, v.y, v.z)
+            if f.active:
+                for v in f.vertices: 
+                    glVertex(v.x, v.y, v.z)
         glEnd()
         
         glPopMatrix()
@@ -106,10 +145,11 @@ class Objeto3D:
         glColor3f(0, 0, 0)
         glLineWidth(2)        
         
-        for f in self.faces:            
+        for f in self.faces:
             glBegin(GL_LINE_LOOP)
-            for v in f.vertices:
-                glVertex(v.x, v.y, v.z)
+            if f.active:   
+                for v in f.vertices:
+                    glVertex(v.x, v.y, v.z)
             glEnd()
         
         glPopMatrix()
@@ -124,103 +164,76 @@ class Objeto3D:
         
         for f in self.faces:            
             glBegin(GL_TRIANGLE_FAN)
-            for v in f.vertices:
-                glVertex(v.x, v.y, v.z)
+            if f.active:
+                for v in f.vertices:
+                    glVertex(v.x, v.y, v.z)
+                    
             glEnd()
+            
         
         glPopMatrix()
         pass
 
 
     def Transforma(self, dest):
-        print(f"Faces: {len(self.faces)} Dest: {len(dest.faces)}")
-        dest_centroids = [f.update_centroid() for f in dest.faces]
-        for i,c in enumerate(dest_centroids):
-            print(f"Centroid {i}: {c.x} {c.y} {c.z}")  
-        for i in range(0, len(self.faces)):
-             #busca o centriode da face dest mais proximo
-            
-            _, dest_idx = self.faces[i].update_centroid().closest_point(dest_centroids)
-            self.faces[i].dest = dest.faces[dest_idx]
-            print(f"Face {i} mais proxima: {dest_idx}. Dest:{self.faces[i].dest.centroid.x} {self.faces[i].dest.centroid.y} {self.faces[i].dest.centroid.z} Orig: {self.faces[i].centroid.x} {self.faces[i].centroid.y} {self.faces[i].centroid.z}")
+        timeline = 0
+        print(f"FacesAtivas : {len([f for f in self.faces if f.active])} Dest: {len(dest.faces)}")
+        dest_centroids = [f.update_centroid() for f in dest.faces if f.active]
+        dest_centroids_idxs = [i for i in range(len(dest_centroids))] 
 
 
+        for i in range(0, max(len(dest.faces), len(self.faces))):
+            if i > len(self.faces) - 1:
+                # adicionar nova face inativa e evento de ativação
+                random_face = self.faces[random.randint(0, len(self.faces) - 1)]
+                new_face = Face([Ponto(v.x, v.y, v.z) for v in random_face.vertices])
+                self.faces.append(new_face)
+                self.events.append(Event(timeline,i))
+                timeline += 1
+                #print(f"Adicionado face {i} inativa para ser ativada em {timeline}")
 
-        # if len(dest.vertices)>len(self.vertices):
-        #     self.vertices = self.vertices + [ random.choice(self.vertices) for _ in range(len(dest.vertices) - len(self.vertices))]
+            if len(dest_centroids) > 0:
+                _, dest_idx = self.faces[i].update_centroid().closest_point(dest_centroids)
+                self.faces[i].set_dest(dest.faces[dest_centroids_idxs[dest_idx]])
+                del dest_centroids[dest_idx]
+                del dest_centroids_idxs[dest_idx]
+            else:
+                self.faces[i].set_dest(dest.faces[random.randint(0, len(dest.faces) - 1)])
+                #evento de remoção de face para destino repetido
+                self.events.append(Event(timeline,i))
+                timeline += 1
+                print(f"Adicionando evento de remoção em {timeline} para face {i} ativa")
 
-        # events_amount = max(len(dest.faces), len(self.faces))
-        # interval = 100 / events_amount
-        # for dest_idx in range(events_amount):
-        #     event_time = dest_idx * interval
-        #     event = Event(event_time)
-        #     self.events.append(event)
-        
-        # vertices_cpy = dest.vertices.copy()
-        # for origin_idx, v in enumerate(self.vertices):
-        #     closest, dest_idx = v.closest_point(vertices_cpy)
-        #     if dest_idx == None:
-        #         dest_idx = random.randint(0, len(dest.vertices) - 1)
-        #         closest = dest.vertices[dest_idx]
-        #     else:
-        #         del vertices_cpy[dest_idx]
-                
-        #     self.vertices_dest.append(closest)
-        #     self.original_idxs.append(dest_idx)
-
-        #     # no caso do tamanho de vertices do destino ser maior vai ter que inverter a chave
-        #     k,v=0,0
-        #     if len(self.vertices) > len(dest.vertices):
-        #         k,v = dest_idx,origin_idx
-        #     else:
-        #         k,v = origin_idx,dest_idx
-
-
-        #     if k not in self.rotas:
-        #         self.rotas[k] = []
-        #     self.rotas[k].append(v)
-  
-        # print(f"Vertices: {len(self.vertices)} CPY: {len(vertices_cpy)}")
-        pass
-
-    def mapFaces(self, face):
-        return [self.original_idxs[i] for i in face]
-
-
-    def AtualizaFaces(self,dest,index):
+        self.max_timeline = timeline
 
         pass
 
 
     def Aproxima(self,dest,passo):
-        print(f"Faces: {len(self.faces)} Dest: {len(dest.faces)}")
+        active_faces = len([f for f in self.faces if f.active])
+        print(f"Faces Ativas: {active_faces} Dest: {len(dest.faces)}, Timeline: {self.morph_timeline} MaxTimeline: {self.max_timeline} Vertices: {len([v for f in self.faces for v in f.vertices])} Vertices Dest: {len([v for f in dest.faces for v in f.vertices])}")
+        # if self.morph_timeline >= self.max_timeline:
+        #     return
         for i in range(len(self.faces)):
-            self.faces[i].move_to_dest(passo)
-        # print(f'Events {len([event for event in self.events if event.executed == False])}')
-        # print(f"Timeline: {self.morph_timeline}")
-        # print(f"Vertices: {len(self.vertices)} Dest: {len(dest.vertices)} VD: {len(self.vertices_dest)}")
-        # print(f"Faces: {len(self.faces)} Dest: {len(dest.faces)}")
-        # #verifica se tem evento
-        # for index, event in enumerate(self.events):
-        #     if self.morph_timeline >= event.time and event.executed == False:
-        #         self.AtualizaFaces(dest,index)
-        #         event.executed = True
-        #         break
-        # for i in range(0, len(self.vertices)):
-        #     destPoint = self.vertices_dest[i]
-        #     originPoint = self.vertices[i]
+            if self.faces[i].active:
+                self.faces[i].move_to_dest(passo)
 
-        #     if originPoint == destPoint:
-        #         print(f"Vertice {i} já chegou no destino")
-        #         continue
-        #     if abs(destPoint.x - originPoint.x) < 0.01 and abs(destPoint.y - originPoint.y) < 0.01 and abs(destPoint.z - originPoint.z) < 0.01:
-        #         self.vertices[i] = destPoint
-        #     else:
-        #         self.vertices[i].x += (destPoint.x - originPoint.x) * passo
-        #         self.vertices[i].y += (destPoint.y - originPoint.y) * passo
-        #         self.vertices[i].z += (destPoint.z - originPoint.z) * passo
+        for e in [e for e in self.events if e.should_execute(self.morph_timeline)]:
+            if len(dest.faces) > active_faces:
+                # acionar face
+                print(f"Acionando face {e.index}")
+                self.faces[e.index].activate()
+                pass
+            elif len(dest.faces) < active_faces:
+                # remover faces
+                print(f"Desativando face {e.index}")
+                self.faces[e.index].deactivate()
+                pass
+            print(f"Vertices: {len([v for f in self.faces for v in f.vertices])} Vertices Dest: {len([v for f in dest.faces for v in f.vertices ])}")
+
+            
         
-        # self.morph_timeline += 1
+        self.morph_timeline += 10
         pass
 
 

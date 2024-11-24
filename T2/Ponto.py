@@ -14,6 +14,7 @@ class Ponto:
         self.y = y
         self.z = z
     
+    
     """ Imprime os valores de cada eixo do ponto """
     # Faz a impressao usando sobrecarga de funcao
     # https://www.educative.io/edpresso/what-is-method-overloading-in-python

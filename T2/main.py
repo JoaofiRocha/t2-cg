@@ -20,15 +20,17 @@ def init():
     glEnable(GL_DEPTH_TEST)
     glEnable(GL_CULL_FACE)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    origin_name = 'untitled.obj'
+    dest_name = 'teste.obj'
 
     o = Objeto3D()
-    o.LoadFile('untitled.obj')
+    o.LoadFile(origin_name)
 
     d = Objeto3D()
-    d.LoadFile('teste.obj')
+    d.LoadFile(dest_name)
 
     morph = Objeto3D()
-    morph.LoadFile('untitled.obj')
+    morph.LoadFile(origin_name)
 
     DefineLuz()
     PosicUser()
@@ -131,7 +133,7 @@ def DesenhaCubo():
     glPopMatrix()
 
 
-def desenha(obj:Objeto3D):
+def desenha(obj:Objeto3D, d:Objeto3D = None):
     def des():
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -142,12 +144,12 @@ def desenha(obj:Objeto3D):
         obj.Desenha()
         obj.DesenhaWireframe()
         obj.DesenhaVertices()
-
+        if d != None:
+            d.DesenhaVertices(1,0,0)
         glutSwapBuffers()
     return des
 
 def teclado(key, x, y):
-    #o.rotation = (1, 0, 0, o.rotation[3] + 2)    
     global transformacao_iniciada
     global morph, d
 
@@ -195,7 +197,7 @@ def main():
     glutInitWindowPosition(350, 550)
     windowsMorph = glutCreateWindow('Trabalho 2 - CG - Morph')
     init()
-    glutDisplayFunc(desenha(morph))
+    glutDisplayFunc(desenha(morph,d))
 
 
 
