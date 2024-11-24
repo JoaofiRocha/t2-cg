@@ -20,8 +20,8 @@ def init():
     glEnable(GL_DEPTH_TEST)
     glEnable(GL_CULL_FACE)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-    origin_name = 'teste.obj'
-    dest_name = 'untitled.obj'
+    origin_name = 'untitled.obj'
+    dest_name = 'teste.obj'
 
     o = Objeto3D()
     o.LoadFile(origin_name)

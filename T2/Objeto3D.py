@@ -3,7 +3,7 @@ from OpenGL.GLU import *
 from OpenGL.GL import *
 from Ponto import *
 import random
-
+remover_vertices = True
 class Event:
     def __init__(self, time: float,index, executed: bool = False):
         self.time = time
@@ -118,6 +118,8 @@ class Objeto3D:
         pass
 
     def DesenhaVertices(self, r=.1,g=.1,b=.8):
+        if remover_vertices:
+            return
         glPushMatrix()
         glTranslatef(self.position.x, self.position.y, self.position.z)
         glRotatef(self.rotation[3], self.rotation[0], self.rotation[1], self.rotation[2])
