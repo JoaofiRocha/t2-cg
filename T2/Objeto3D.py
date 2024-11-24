@@ -182,7 +182,7 @@ class Objeto3D:
             if i > len(self.faces) - 1:
                 # adicionar nova face inativa e evento de ativação
                 random_face = dest.faces[random.randint(0, len(dest.faces) - 1)]
-                new_face = Face([Ponto(v.x, v.y, v.z) for v in random_face.vertices])
+                new_face = Face([Ponto(v.x, v.y, v.z) for v in random_face.vertices],False)
                 self.faces.append(new_face)
                 self.events.append(Event(timeline,i))
                 timeline += 1
@@ -217,7 +217,6 @@ class Objeto3D:
         for e in [e for e in self.events if e.should_execute(self.morph_timeline)]:
             if len(dest.faces) > active_faces:
                 # acionar face
-                print(f"Acionando face {e.index}")
                 self.faces[e.index].activate()
             elif len(dest.faces) < active_faces:
                 # remover faces
