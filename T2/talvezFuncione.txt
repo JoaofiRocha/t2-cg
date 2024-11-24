@@ -1,0 +1,121 @@
+import random
+
+class Ponto:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def __repr__(self):
+        return f"Ponto({self.x}, {self.y}, {self.z})"
+
+    def distance_to(self, outro):
+        return ((self.x - outro.x) ** 2 + (self.y - outro.y) ** 2 + (self.z - outro.z) ** 2) ** 0.5
+
+
+class Face:
+    def __init__(self, vertices):
+        self.vertices = vertices  # Lista de objetos Ponto
+        self.active = True  # Se a face está ativa
+        self.centroid = None
+        self.dest = None
+
+    def update_centroid(self):
+        self.centroid = Ponto(
+            sum(v.x for v in self.vertices) / len(self.vertices),
+            sum(v.y for v in self.vertices) / len(self.vertices),
+            sum(v.z for v in self.vertices) / len(self.vertices),
+        )
+        return self.centroid
+
+    def closest_point(self, pontos):
+        distancias = [(i, self.centroid.distance_to(p)) for i, p in enumerate(pontos)]
+        return min(distancias, key=lambda x: x[1])
+
+    def set_dest(self, dest_face):
+        self.dest = dest_face
+
+    def move_to_dest(self, passo):
+        if self.dest:
+            for i, vertice in enumerate(self.vertices):
+                dest_vertice = self.dest.vertices[i]
+                vertice.x += (dest_vertice.x - vertice.x) * passo
+                vertice.y += (dest_vertice.y - vertice.y) * passo
+                vertice.z += (dest_vertice.z - vertice.z) * passo
+
+    def deactivate(self):
+        self.active = False
+
+    def activate(self):
+        self.active = True
+
+
+class Event:
+    def __init__(self, time, index):
+        self.time = time
+        self.index = index
+
+    def should_execute(self, current_time):
+        return current_time >= self.time
+
+
+class ObjectMorph:
+    def __init__(self, faces):
+        self.faces = faces  # Lista de objetos Face
+        self.events = []
+        self.morph_timeline = 0
+        self.max_timeline = 0
+
+    def debug_faces(self):
+        print("Debugging Faces:")
+        for i, face in enumerate(self.faces):
+            print(f"Face {i}: Active={face.active}, Centroid={face.centroid}, "
+                  f"Vertices={[(v.x, v.y, v.z) for v in face.vertices]}")
+
+    def Transforma(self, dest):
+        timeline = 0
+        print(f"Faces Ativas: {len([f for f in self.faces if f.active])}, Dest: {len(dest.faces)}")
+
+        dest_centroids = [f.update_centroid() for f in dest.faces if f.active]
+        dest_centroids_idxs = list(range(len(dest_centroids)))
+
+        for i in range(max(len(dest.faces), len(self.faces))):
+            if i > len(self.faces) - 1:
+                # Adicionar nova face inativa e evento de ativação
+                random_face = random.choice(self.faces)
+                new_face = Face([Ponto(v.x, v.y, v.z) for v in random_face.vertices])
+                new_face.deactivate()  # Inicialmente inativa
+                self.faces.append(new_face)
+                self.events.append(Event(timeline, len(self.faces) - 1))
+                timeline += 1
+
+            if dest_centroids:
+                _, dest_idx = self.faces[i].update_centroid().closest_point(dest_centroids)
+                self.faces[i].set_dest(dest.faces[dest_centroids_idxs[dest_idx]])
+                del dest_centroids[dest_idx]
+                del dest_centroids_idxs[dest_idx]
+            else:
+                self.faces[i].set_dest(dest.faces[random.randint(0, len(dest.faces) - 1)])
+                self.events.append(Event(timeline, i))
+                timeline += 1
+
+        self.max_timeline = timeline
+
+    def Aproxima(self, dest, passo):
+        active_faces = len([f for f in self.faces if f.active])
+        print(f"Faces Ativas: {active_faces}, Dest: {len(dest.faces)}, Timeline: {self.morph_timeline}, "
+              f"MaxTimeline: {self.max_timeline}")
+
+        for face in self.faces:
+            if face.active:
+                face.move_to_dest(passo)
+
+        for e in [e for e in self.events if e.should_execute(self.morph_timeline)]:
+            if len(dest.faces) > active_faces:
+                print(f"Ativando face {e.index}")
+                self.faces[e.index].activate()
+            elif len(dest.faces) < active_faces:
+                print(f"Desativando face {e.index}")
+                self.faces[e.index].deactivate()
+
+        self.morph_timeline += 10
