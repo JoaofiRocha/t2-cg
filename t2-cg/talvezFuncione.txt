@@ -1,0 +1,98 @@
+class Ponto:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def distance_to(self, other):
+        return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2 + (self.z - other.z) ** 2) ** 0.5
+
+class Face:
+    def __init__(self, vertices):
+        self.vertices = vertices  # Lista de objetos Ponto
+        self.active = True  # Se a face está ativa
+        self.centroid = None
+        self.dest = None
+
+    def update_centroid(self):
+        self.centroid = Ponto(
+            sum(v.x for v in self.vertices) / len(self.vertices),
+            sum(v.y for v in self.vertices) / len(self.vertices),
+            sum(v.z for v in self.vertices) / len(self.vertices),
+        )
+        return self.centroid
+
+    def closest_point(self, pontos):
+        distancias = [(i, self.centroid.distance_to(p)) for i, p in enumerate(pontos)]
+        return min(distancias, key=lambda x: x[1])
+
+    def set_dest(self, dest_face):
+        self.dest = dest_face
+
+    def move_to_dest(self, passo):
+        if self.dest:
+            for i, vertice in enumerate(self.vertices):
+                dest_vertice = self.dest.vertices[i]
+                vertice.x += (dest_vertice.x - vertice.x) * passo
+                vertice.y += (dest_vertice.y - vertice.y) * passo
+                vertice.z += (dest_vertice.z - vertice.z) * passo
+
+    def deactivate(self):
+        self.active = False
+
+    def activate(self):
+        self.active = True
+
+class Event:
+    def __init__(self, time, index):
+        self.time = time
+        self.index = index
+
+class Objeto3D:
+    def __init__(self, faces):
+        self.faces = faces
+        self.morph_timeline = 0
+        self.max_timeline = 100
+        self.events = []
+
+    def Aproxima(self, dest, passo):
+        active_faces = len([f for f in self.faces if f.active])
+        print(f"Faces Ativas: {active_faces} Dest: {len(dest.faces)}, Timeline: {self.morph_timeline} MaxTimeline: {self.max_timeline} Vertices: {len([v for f in self.faces for v in f.vertices])} Vertices Dest: {len([v for f in dest.faces for v in f.vertices])}")
+
+        if self.morph_timeline >= self.max_timeline:
+            print("Morph timeline reached the maximum limit.")
+            return
+
+        for i in range(len(self.faces)):
+            if self.faces[i].active:
+                self.faces[i].move_to_dest(passo)
+
+        for e in [e for e in self.events if e.should_execute(self.morph_timeline)]:
+            if len(dest.faces) > active_faces:
+                print(f"Acionando face {e.index}")
+                self.faces[e.index].activate()
+            elif len(dest.faces) < active_faces:
+                print(f"Desativando face {e.index}")
+                self.faces[e.index].deactivate()
+
+        self.morph_timeline += passo
+        print(f"Updated morph timeline: {self.morph_timeline}")
+        print(f"Vertices: {len([v for f in self.faces for v in f.vertices])} Vertices Dest: {len([v for f in dest.faces for v in f.vertices])}")
+
+    def associate_faces(self, dest):
+        for face in self.faces:
+            face.update_centroid()
+        for face in dest.faces:
+            face.update_centroid()
+
+        for face in self.faces:
+            closest_face = min(dest.faces, key=lambda f: face.centroid.distance_to(f.centroid))
+            face.set_dest(closest_face)
+
+# Example usage
+faces1 = [Face([Ponto(0, 0, 0), Ponto(1, 0, 0), Ponto(0, 1, 0)])]
+faces2 = [Face([Ponto(0, 0, 1), Ponto(1, 0, 1), Ponto(0, 1, 1)])]
+obj1 = Objeto3D(faces1)
+obj2 = Objeto3D(faces2)
+obj1.associate_faces(obj2)
+obj1.Aproxima(obj2, 0.1)
