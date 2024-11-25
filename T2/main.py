@@ -20,8 +20,8 @@ def init():
     glEnable(GL_DEPTH_TEST)
     glEnable(GL_CULL_FACE)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-    origin_name = 'untitled.obj'
-    dest_name = 'teste.obj'
+    origin_name = 'models/easy2.obj'
+    dest_name = 'models/easy3.obj'
 
     o = Objeto3D()
     o.LoadFile(origin_name)
@@ -159,7 +159,8 @@ def teclado(key, x, y):
         return
 
     if key == b'+':
-       morph.Aproxima(d,0.1)
+       passo = (max(len(d.faces),len(o.faces)) - min(len(d.faces),len(o.faces)) )* 0.00005
+       morph.Aproxima(d,passo)
 
     glutPostRedisplay()
     pass
