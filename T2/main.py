@@ -15,9 +15,15 @@ transformacao_iniciada:bool = False
 
 
 def init():
-    global o, d, morph
+    global o, d, morph, camera_pos, camera_focus, camera_up, angulo_rotacao
+
     glClearColor(0.5, 0.5, 0.9, 1.0)
     glClearDepth(1.0)
+
+    camera_pos = [-2, 8, -12]
+    camera_focus = [0, 7, 0]
+    camera_up = [0, 1, 0]
+    angulo_rotacao = 0.0  # Ângulo de rotação inicial (em graus)
 
     glDepthFunc(GL_LESS)
     glEnable(GL_DEPTH_TEST)
@@ -89,8 +95,13 @@ def PosicUser():
     # As três próximas especificam o ponto de foco nos eixos x, y e z
     # As três últimas especificam o vetor up
     # https://registry.khronos.org/OpenGL-Refpages/gl2.1/xhtml/gluLookAt.xml
-    gluLookAt(-2, 8, -12, 0, 7, 0, 0, 1.0, 0)
-    #gluLookAt(camera_pos[0], camera_pos[1], camera_pos[2], 0, camera_rot[0], camera_rot[1], 0, 1.0, 0)
+    #gluLookAt(-2, 8, -12, 0, 7, 0, 0, 1.0, 0)
+
+    glRotatef(angulo_rotacao, 0, 1, 0)
+
+    gluLookAt(camera_pos[0], camera_pos[1], camera_pos[2],
+        camera_focus[0], camera_focus[1], camera_focus[2],
+        camera_up[0], camera_up[1], camera_up[2])
 
 def DesenhaLadrilho():
     glColor3f(0.5, 0.5, 0.5)  # desenha QUAD preenchido
@@ -157,7 +168,9 @@ def desenha(obj:Objeto3D, d:Objeto3D = None):
 
 
 def teclado(key, x, y):
-    global transformacao_iniciada, morph, d, camera_pos, camera_rot
+
+
+    global transformacao_iniciada, morph, d, camera_pos, camera_rot, angulo_rotacao
 
     if transformacao_iniciada == False and key == b' ':
         glutInitWindowSize(640, 480)
@@ -173,6 +186,41 @@ def teclado(key, x, y):
         transformacao_iniciada = True
         return
     
+    # Movimentação da câmera
+    passo = 0.5
+    if key == b'w':  # Move para frente
+        camera_pos[2] += passo
+        camera_focus[2] += passo
+    elif key == b's':  # Move para trás
+        camera_pos[2] -= passo
+        camera_focus[2] -= passo
+    elif key == b'a':  # Move para a esquerda
+        camera_pos[0] += passo
+        camera_focus[0] += passo
+    elif key == b'd':  # Move para a direita
+        camera_pos[0] -= passo
+        camera_focus[0] -= passo
+    elif key == b'q':  # Move para cima
+        camera_pos[1] += passo
+        camera_focus[1] += passo
+    elif key == b'e':  # Move para baixo
+        camera_pos[1] -= passo
+        camera_focus[1] -= passo
+
+    print(f"Camera Position: {camera_pos}")
+    print(f"Camera Focus: {camera_focus}")
+
+    PosicUser()
+    
+    if key == b'l':
+            angulo_rotacao += 5
+            if angulo_rotacao > 360:
+                angulo_rotacao -= 360
+    elif key == b'r':
+            angulo_rotacao -= 5
+        
+
+
 
     if key == b'+':
         passo = (max(len(d.faces), len(o.faces)) - min(len(d.faces), len(o.faces))) * 0.00005
