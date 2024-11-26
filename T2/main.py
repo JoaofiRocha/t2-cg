@@ -17,7 +17,7 @@ transformacao_iniciada:bool = False
 
 
 def init():
-    global o, d, morph, camera_pos, camera_focus, camera_up, angulo_rotacao
+    global o, d, morph, camera_pos, camera_focus, camera_up
 
     glClearColor(0.5, 0.5, 0.9, 1.0)
     glClearDepth(1.0)
@@ -25,7 +25,7 @@ def init():
     camera_pos = [-1.24711209, 4.51113749, -11.04963121]
     camera_focus = [0, 0, 0]
     camera_up = [0, 1, 0]
-    angulo_rotacao = 0.0 
+
 
     glDepthFunc(GL_LESS)
     glEnable(GL_DEPTH_TEST)
@@ -99,7 +99,7 @@ def PosicUser():
     # https://registry.khronos.org/OpenGL-Refpages/gl2.1/xhtml/gluLookAt.xml
     #gluLookAt(-2, 8, -12, 0, 7, 0, 0, 1.0, 0)
 
-    glRotatef(angulo_rotacao, 0, 1, 0)
+    #glRotatef(angulo_rotacao, 0, 1, 0)
 
     gluLookAt(camera_pos[0], camera_pos[1], camera_pos[2],
         camera_focus[0], camera_focus[1], camera_focus[2],
