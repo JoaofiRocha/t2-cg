@@ -175,12 +175,14 @@ class Objeto3D:
 
     def Transforma(self, dest):
         timeline = 0
+        # calculo dos centroides das faces de destino
         print(f"FacesAtivas : {len([f for f in self.faces if f.active])} Dest: {len(dest.faces)}")
         dest_centroids = [f.update_centroid() for f in dest.faces if f.active]
         dest_centroids_idxs = [i for i in range(len(dest_centroids))] 
 
-
+            # verificar numero faces
         for i in range(0, max(len(dest.faces), len(self.faces))):
+            # se obj atual tem menos faces que dest
             if i > len(self.faces) - 1:
                 # adicionar nova face inativa e evento de ativação
                 random_face = self.faces[random.randint(0, len(self.faces) - 1)]
@@ -190,9 +192,12 @@ class Objeto3D:
                 timeline += 1
                 print(f"Adicionado face {i} inativa para ser ativada em {timeline}")
 
+            # atribui faces no destino, a partir da face mais proxima baseada no centroide
             if len(dest_centroids) > 0:
                 _, dest_idx = self.faces[i].update_centroid().closest_point(dest_centroids)
                 self.faces[i].set_dest(dest.faces[dest_centroids_idxs[dest_idx]])
+
+                #remove pra evitar duplicatas
                 del dest_centroids[dest_idx]
                 del dest_centroids_idxs[dest_idx]
             else:
@@ -209,17 +214,24 @@ class Objeto3D:
 
     def Aproxima(self,dest,passo):
         active_faces = len([f for f in self.faces if f.active])
-        print(f"Faces Ativas: {active_faces} Dest: {len(dest.faces)}, Timeline: {self.morph_timeline} MaxTimeline: {self.max_timeline} Vertices: {len([v for f in self.faces for v in f.vertices])} Vertices Dest: {len([v for f in dest.faces for v in f.vertices])}")
+        print(f"Faces Ativas: {active_faces} Dest: {len(dest.faces)}, Timeline: {self.morph_timeline} MaxTimeline: {self.max_timeline} Vertices: {len([v for f in self.faces for v in f.vertices])} Vertices Dest: {len([v
+         for f in dest.faces for v in f.vertices])}")
         # if self.morph_timeline >= self.max_timeline:
         #     return
+        # pra cada face ativa, move ela pro destino
         for i in range(len(self.faces)):
             if self.faces[i].active:
                 self.faces[i].move_to_dest(passo)
 
+        # pra cada evento que ta programado pra executar (criados la no transforma)
         for e in [e for e in self.events if e.should_execute(self.morph_timeline)]:
+
+            # se o num de faces do destino é MAIOR que o num de faces ativas no obj atual
             if len(dest.faces) > active_faces:
                 # acionar face
                 self.faces[e.index].activate()
+
+            #se o num de faces do destino é MENOR que o num de faces ativas no obj atual
             elif len(dest.faces) < active_faces:
                 # remover faces
                 print(f"Desativando face {e.index}")
