@@ -5,6 +5,8 @@ from OpenGL.GL import *
 
 from Objeto3D import *
 
+import numpy as np
+
 o:Objeto3D
 d:Objeto3D
 morph:Objeto3D
@@ -165,14 +167,26 @@ def desenha(obj:Objeto3D, d:Objeto3D = None):
     return des
 
 
+radius = 10.0
+theta = 0.0  # Angle in the xy-plane from the x-axis
+pi = np.pi / 4  # Angle from the z-axis
 
+def update_camera_position():
+    global camera_pos, camera_focus, radius, theta, pi
+    camera_pos = np.array([
+        radius * np.sin(pi) * np.cos(theta),
+        radius * np.cos(pi),
+        radius * np.sin(pi) * np.sin(theta)
+        
+    ])
+    camera_focus = np.array([0.0, 0.0, 0.0])
 
 def teclado(key, x, y):
 
 
-    global transformacao_iniciada, morph, d, camera_pos, camera_rot, angulo_rotacao
+    global transformacao_iniciada, morph, d, radius, theta, pi
 
-    if transformacao_iniciada == False and key == b' ':
+    if transformacao_iniciada == False and key == b' ': #inicia transformacao
         glutInitWindowSize(640, 480)
         glutInitWindowPosition(350, 550)
         windowsMorph = glutCreateWindow('Trabalho 2 - CG - Morph')
@@ -186,43 +200,35 @@ def teclado(key, x, y):
         transformacao_iniciada = True
         return
     
-    # Movimentação da câmera
-    passo = 0.5
-    if key == b'w':  # Move para frente
-        camera_pos[2] += passo
-        camera_focus[2] += passo
-    elif key == b's':  # Move para trás
-        camera_pos[2] -= passo
-        camera_focus[2] -= passo
-    elif key == b'a':  # Move para a esquerda
-        camera_pos[0] += passo
-        camera_focus[0] += passo
-    elif key == b'd':  # Move para a direita
-        camera_pos[0] -= passo
-        camera_focus[0] -= passo
-    elif key == b'q':  # Move para cima
-        camera_pos[1] += passo
-        camera_focus[1] += passo
-    elif key == b'e':  # Move para baixo
-        camera_pos[1] -= passo
-        camera_focus[1] -= passo
+    
+    #movimento camera
+    passo = 0.1 
+    passo_zoom = 0.5
+
+    if key == b'w':  # Zoom in
+        radius -= passo_zoom
+    elif key == b's':  # Zoom out
+        radius += passo_zoom
+    elif key == b'a':  # direita
+        theta -= passo
+    elif key == b'd':  # esquerda
+        theta += passo
+    elif key == b'q':  # cima
+        pi -= passo
+    elif key == b'e':  # baixo
+        pi += passo
+
+    pi = np.clip(pi, 0.01, np.pi - 0.01)
+
+    update_camera_position()
 
     print(f"Camera Position: {camera_pos}")
     print(f"Camera Focus: {camera_focus}")
-
+            
     PosicUser()
-    
-    if key == b'l':
-            angulo_rotacao += 5
-            if angulo_rotacao > 360:
-                angulo_rotacao -= 360
-    elif key == b'r':
-            angulo_rotacao -= 5
         
 
-
-
-    if key == b'+':
+    if key == b'+': #aproxima
         passo = (max(len(d.faces), len(o.faces)) - min(len(d.faces), len(o.faces))) * 0.00005
         morph.Aproxima(d, passo)    
     
