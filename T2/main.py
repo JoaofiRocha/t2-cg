@@ -11,6 +11,9 @@ morph:Objeto3D
 
 transformacao_iniciada:bool = False
 
+
+
+
 def init():
     global o, d, morph
     glClearColor(0.5, 0.5, 0.9, 1.0)
@@ -87,6 +90,7 @@ def PosicUser():
     # As três últimas especificam o vetor up
     # https://registry.khronos.org/OpenGL-Refpages/gl2.1/xhtml/gluLookAt.xml
     gluLookAt(-2, 8, -12, 0, 7, 0, 0, 1.0, 0)
+    #gluLookAt(camera_pos[0], camera_pos[1], camera_pos[2], 0, camera_rot[0], camera_rot[1], 0, 1.0, 0)
 
 def DesenhaLadrilho():
     glColor3f(0.5, 0.5, 0.5)  # desenha QUAD preenchido
@@ -149,28 +153,40 @@ def desenha(obj:Objeto3D, d:Objeto3D = None):
         glutSwapBuffers()
     return des
 
-def teclado(key, x, y):
-    global transformacao_iniciada
-    global morph, d
 
-    if transformacao_iniciada == False:
+
+
+def teclado(key, x, y):
+    global transformacao_iniciada, morph, d, camera_pos, camera_rot
+
+    if transformacao_iniciada == False and key == b' ':
+        glutInitWindowSize(640, 480)
+        glutInitWindowPosition(350, 550)
+        windowsMorph = glutCreateWindow('Trabalho 2 - CG - Morph')
+        init()
+        glutDisplayFunc(desenha(morph))
+        
+        
         morph.Transforma(d)
+        glutKeyboardFunc(teclado)
+        
         transformacao_iniciada = True
         return
+    
 
     if key == b'+':
-       passo = (max(len(d.faces),len(o.faces)) - min(len(d.faces),len(o.faces)) )* 0.00005
-       morph.Aproxima(d,passo)
-
+        passo = (max(len(d.faces), len(o.faces)) - min(len(d.faces), len(o.faces))) * 0.00005
+        morph.Aproxima(d, passo)    
+    
     glutPostRedisplay()
     pass
+
 
 def main():
     global o, d, morph
 
     glutInit(sys.argv)
 
-    # Define o modelo de operacao da GLUT
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH)
 
 
@@ -189,21 +205,12 @@ def main():
     glutDisplayFunc(desenha(d))
 
 
-
-    glutInitWindowSize(640, 480)
-    glutInitWindowPosition(350, 550)
-    windowsMorph = glutCreateWindow('Trabalho 2 - CG - Morph')
-    init()
-    glutDisplayFunc(desenha(morph))
-
-
-
     # Registra a funcao callback de redesenho da janela de visualizacao
     
 
     # Registra a funcao callback para tratamento das teclas ASCII
     glutKeyboardFunc(teclado)
-
+    
     try:
         # Inicia o processamento e aguarda interacoes do usuario
         glutMainLoop()
