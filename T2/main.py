@@ -22,10 +22,10 @@ def init():
     glClearColor(0.5, 0.5, 0.9, 1.0)
     glClearDepth(1.0)
 
-    camera_pos = [-2, 8, -12]
-    camera_focus = [0, 7, 0]
+    camera_pos = [-1.24711209, 4.51113749, -11.04963121]
+    camera_focus = [0, 0, 0]
     camera_up = [0, 1, 0]
-    angulo_rotacao = 0.0  # Ângulo de rotação inicial (em graus)
+    angulo_rotacao = 0.0 
 
     glDepthFunc(GL_LESS)
     glEnable(GL_DEPTH_TEST)
@@ -166,10 +166,11 @@ def desenha(obj:Objeto3D, d:Objeto3D = None):
         glutSwapBuffers()
     return des
 
+    
 
-radius = 10.0
-theta = 0.0  # Angle in the xy-plane from the x-axis
-pi = np.pi / 4  # Angle from the z-axis
+radius = 12.0 # distancia
+theta = 4.5  # lado
+pi = np.pi / 4 + 0.4 # cima e baixo
 
 def update_camera_position():
     global camera_pos, camera_focus, radius, theta, pi
@@ -180,6 +181,10 @@ def update_camera_position():
         
     ])
     camera_focus = np.array([0.0, 0.0, 0.0])
+    
+    print(f"Initial Camera Position: {camera_pos}")
+    
+    
 
 def teclado(key, x, y):
 
