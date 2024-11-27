@@ -31,7 +31,7 @@ def init():
     glEnable(GL_DEPTH_TEST)
     glEnable(GL_CULL_FACE)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-    origin_name = 'models/easy2.obj'
+    origin_name = 'models/hard3.obj'
     dest_name = 'models/easy3.obj'
 
     o = Objeto3D()
@@ -170,26 +170,24 @@ def desenha(obj:Objeto3D, d:Objeto3D = None):
 
 radius = 12.0 # distancia
 theta = 4.5  # lado
-pi = np.pi / 4 + 0.4 # cima e baixo
+phi = np.pi / 4 + 0.4 # cima e baixo
 
 def update_camera_position():
-    global camera_pos, camera_focus, radius, theta, pi
+    global camera_pos, camera_focus, radius, theta, phi
     camera_pos = np.array([
-        radius * np.sin(pi) * np.cos(theta),
-        radius * np.cos(pi),
-        radius * np.sin(pi) * np.sin(theta)
-        
+        radius * np.sin(phi) * np.cos(theta),
+        radius * np.cos(phi),
+        radius * np.sin(phi) * np.sin(theta)
     ])
-    camera_focus = np.array([0.0, 0.0, 0.0])
     
-    print(f"Initial Camera Position: {camera_pos}")
+    print(f"Posicao camera: {camera_pos}")
     
     
 
 def teclado(key, x, y):
 
 
-    global transformacao_iniciada, morph, d, radius, theta, pi
+    global transformacao_iniciada, morph, d, radius, theta, phi
 
     if transformacao_iniciada == False and key == b' ': #inicia transformacao
         glutInitWindowSize(640, 480)
@@ -219,16 +217,14 @@ def teclado(key, x, y):
     elif key == b'd':  # esquerda
         theta += passo
     elif key == b'q':  # cima
-        pi -= passo
+        phi -= passo
     elif key == b'e':  # baixo
-        pi += passo
+        phi += passo
 
-    pi = np.clip(pi, 0.01, np.pi - 0.01)
+    phi = np.clip(phi, 0.01, np.pi - 0.01)
 
     update_camera_position()
 
-    print(f"Camera Position: {camera_pos}")
-    print(f"Camera Focus: {camera_focus}")
             
     PosicUser()
         
@@ -263,8 +259,6 @@ def main():
     init()
     glutDisplayFunc(desenha(d))
 
-
-    # Registra a funcao callback de redesenho da janela de visualizacao
     
 
     # Registra a funcao callback para tratamento das teclas ASCII

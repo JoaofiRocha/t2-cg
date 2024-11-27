@@ -186,7 +186,7 @@ class Objeto3D:
             if i > len(self.faces) - 1:
                 # adicionar nova face inativa e evento de ativação
                 random_face = self.faces[random.randint(0, len(self.faces) - 1)]
-                new_face = Face([Ponto(v.x, v.y, v.z) for v in random_face.vertices],False)
+                new_face = Face([Ponto(v.x, v.y, v.z) for v in random_face.vertices],True)
                 self.faces.append(new_face)
                 self.events.append(Event(timeline,i))
                 timeline += 1
